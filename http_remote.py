@@ -9,6 +9,7 @@ import time
 # Default port that Spotify Web Helper binds to.
 PORT = 4370
 DEFAULT_RETURN_ON = ['login', 'logout', 'play', 'pause', 'error', 'ap']
+ORIGIN_HEADER = {'Origin': 'https://open.spotify.com'}
 
 # I had some troubles with the version of Spotify's SSL cert and Python 2.7 on Mac.
 # Did this monkey dirty patch to fix it. Your milage may vary.
@@ -36,7 +37,7 @@ def get_url(url):
 
 
 def get_version():
-    return get_json(get_url('/service/version.json'), params={'service': 'remote'})
+    return get_json(get_url('/service/version.json'), params={'service': 'remote'}, headers=ORIGIN_HEADER)
 
 
 def get_oauth_token():
@@ -45,8 +46,7 @@ def get_oauth_token():
 
 def get_csrf_token():
     # Requires Origin header to be set to generate the CSRF token.
-    headers = {'Origin': 'https://open.spotify.com'}
-    return get_json(get_url('/simplecsrf/token.json'), headers=headers)['token']
+    return get_json(get_url('/simplecsrf/token.json'), headers=ORIGIN_HEADER)['token']
 
 
 def get_status(oauth_token, csrf_token, return_after=59, return_on=DEFAULT_RETURN_ON):
@@ -56,7 +56,7 @@ def get_status(oauth_token, csrf_token, return_after=59, return_on=DEFAULT_RETUR
         'returnafter': return_after,
         'returnon': ','.join(return_on)
     }
-    return get_json(get_url('/remote/status.json'), params=params)
+    return get_json(get_url('/remote/status.json'), params=params, headers=ORIGIN_HEADER)
 
 
 def pause(oauth_token, csrf_token, pause=True):
@@ -65,7 +65,7 @@ def pause(oauth_token, csrf_token, pause=True):
         'csrf': csrf_token,
         'pause': 'true' if pause else 'false'
     }
-    get_json(get_url('/remote/pause.json'), params=params)
+    get_json(get_url('/remote/pause.json'), params=params, headers=ORIGIN_HEADER)
 
 
 def unpause(oauth_token, csrf_token):
@@ -79,12 +79,12 @@ def play(oauth_token, csrf_token, spotify_uri):
         'uri': spotify_uri,
         'context': spotify_uri,
     }
-    get_json(get_url('/remote/play.json'), params=params)
+    print params
+    get_json(get_url('/remote/play.json'), params=params, headers=ORIGIN_HEADER)
 
 
 def open_spotify_client():
-    headers = {'Origin': 'https://open.spotify.com'}
-    return get(get_url('/remote/open.json'), headers=headers).text
+    return get(get_url('/remote/open.json'), headers=ORIGIN_HEADER).text
 
 
 if __name__ == '__main__':
